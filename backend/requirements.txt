@@ -1,5 +1,15 @@
+# TradeGate — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Web framework
 flask>=3.0
+
+# CORS support for the frontend (served from file://)
 flask-cors>=4.0
-openai>=1.0
+
+# Environment variable loading from .env
 python-dotenv>=1.0
+
+# Google Gemini AI SDK (live tariff lookup)
+# Used by get_live_tariff() in app.py — safe to omit if no GEMINI_API_KEY is set
 google-genai>=1.0
