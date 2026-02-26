@@ -1,0 +1,104 @@
+# ─────────────────────────────────────────────────────────────
+#  TradeGate — .gitignore
+#  Stack: Python/Flask · Vanilla HTML/JS · 8086 MASM · DOSBox
+# ─────────────────────────────────────────────────────────────
+
+
+# ── Secrets & environment ─────────────────────────────────────
+.env
+*.env
+!.env.example
+
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+pip-wheel-metadata/
+
+
+# ── 8086 MASM build artifacts ─────────────────────────────────
+asm/*.OBJ
+asm/*.obj
+asm/*.LST
+asm/*.lst
+asm/*.CRF
+asm/*.crf
+asm/*.MAP
+asm/*.map
+asm/*.SYM
+asm/*.sym
+asm/*.LIB
+asm/*.lib
+
+
+# ── DOSBox / test output files ────────────────────────────────
+asm/OUT.TXT
+asm/out.txt
+asm/TEST_OUT.TXT
+asm/test_output.txt
+asm/output.txt
+asm/input.txt
+
+
+# ── Stray log / stdio capture files ──────────────────────────
+stdout.txt
+stderr.txt
+*.log
+
+
+# ── Temporary DOSBox working dirs (created by dosbox_runner) ──
+tariff_*/
+tariff_patch_*/
+
+
+# ── OS-generated files ────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+
+# ── Editor / IDE ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+
+# ── Misc debug / stray media ─────────────────────────────────
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.csv
+*.sqlite
+*.db
