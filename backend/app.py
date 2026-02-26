@@ -38,15 +38,16 @@ _TABLE_SIGNATURE = bytes([0xC4, 0x09, 0x60, 0x09, 0xFC, 0x08])
 
 def get_live_tariff(exporter_id: int, importer_id: int, category_id: int):
     """
-    Query Gemini for the current MFN tariff rate.
+    Query Gemini for the current MFN / bilateral tariff rate.
 
-    Returns the rate as a scaled integer (e.g. 2650 = 26.50%),
-    clamped to [1800, 4000].  Returns None on any failure.
+    Returns the rate as a scaled integer (e.g. 2500 = 25.00%),
+    clamped to [0, 15000] (0% free trade – 150% extreme protection).
+    Returns None on any failure.
     """
     if not GEMINI_API_KEY:
         return None
     try:
-        from google import genai                          # google-genai package
+        from google import genai
         from google.genai import types
 
         client = genai.Client(api_key=GEMINI_API_KEY)
@@ -56,10 +57,22 @@ def get_live_tariff(exporter_id: int, importer_id: int, category_id: int):
         category = CATEGORY_NAMES.get(category_id, str(category_id))
 
         prompt = (
-            f"What is the current standard import tariff percentage (MFN rate) "
-            f"applied by {importer} on {category} imported from {exporter}?\n"
-            "Reply with a single decimal number only. "
-            "No % sign. No explanation. No units. Example: 18.5"
+            f"You are a trade tariff expert with knowledge of WTO MFN rates and bilateral trade agreements.\n\n"
+            f"Task: Return the most likely customs import tariff rate that {importer} applies on {category} goods imported from {exporter}.\n\n"
+            f"Consider:\n"
+            f"- WTO Most Favoured Nation (MFN) bound and applied rates\n"
+            f"- Any active free trade agreements between {exporter} and {importer}\n"
+            f"- Preferential rates if a trade agreement exists\n"
+            f"- Typical tariff ranges for {category} in {importer}\n\n"
+            f"Examples of realistic rates:\n"
+            f"- USA on Steel from China: 25.0 (due to Section 301 tariffs)\n"
+            f"- EU (Germany) on Electronics from Japan: 0.0 (EPA agreement)\n"
+            f"- India on Automobiles from USA: 100.0 (high protection)\n"
+            f"- USA on Textiles from Vietnam: 12.0\n"
+            f"- China on Agriculture from USA: 25.0 (trade war tariffs)\n\n"
+            f"Reply with ONLY a single number representing the percentage. "
+            f"No % sign. No explanation. No text. Just the number.\n"
+            f"Example reply: 25.0"
         )
 
         response = client.models.generate_content(
@@ -69,19 +82,19 @@ def get_live_tariff(exporter_id: int, importer_id: int, category_id: int):
         )
         raw = response.text.strip()
 
-        # Extract first float-like token
         match = re.search(r"\d+(?:\.\d+)?", raw)
         if not match:
             return None
 
         float_val = float(match.group())
-        scaled    = round(float_val * 100)
+        scaled = round(float_val * 100)
 
-        # Clamp: 18.00% – 40.00%
-        scaled = max(1800, min(4000, scaled))
+        # Clamp to realistic range: 0% (free trade) to 150% (extreme protection)
+        scaled = max(0, min(15000, scaled))
         return scaled
 
-    except Exception:
+    except Exception as e:
+        app.logger.error(f"Gemini error: {e}")
         return None
 
 
