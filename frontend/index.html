@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TradeGate — Trade Tariff Calculator</title>
+  <script type="module" src="auth.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -28,9 +29,9 @@
     }
 
     html { font-family: 'Inter', sans-serif; font-size: 15px; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem 0; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    .page { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+    .page { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; padding: 2rem 1rem 0; }
 
     /* ── Header ───────────────────────────────────────── */
     header { text-align: center; padding-bottom: 0.25rem; }
@@ -214,6 +215,43 @@
       padding: 0.25rem 0.65rem; border-radius: 100px;
     }
 
+    /* ── Nav ──────────────────────────────────────────── */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 58px;
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.5rem; color: var(--text);
+    }
+    .nav-logo .icon { font-size: 1.4rem; line-height: 1; }
+    .nav-logo span  { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+    .nav-logo span em { color: var(--accent); font-style: normal; }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-link {
+      color: var(--text-label); text-decoration: none;
+      font-size: 0.85rem; font-weight: 500; padding: 0.45rem 0.85rem;
+      border-radius: 6px; border: 1px solid var(--border);
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .nav-link:hover { color: var(--text); border-color: var(--border-focus); background: rgba(59,130,246,0.07); }
+    .nav-signout {
+      font-size: 0.85rem; font-weight: 500; padding: 0.45rem 0.85rem;
+      border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-dim);
+      font-family: inherit; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .nav-signout:hover { color: var(--red); border-color: var(--red); }
+
+    /* ── Pre-fill note ────────────────────────────────── */
+    .prefill-note {
+      font-size: 0.75rem; color: var(--text-dim); margin-top: 0.3rem; display: none;
+    }
+    .prefill-note a { color: var(--accent); text-decoration: none; }
+    .prefill-note a:hover { text-decoration: underline; }
+
     /* ── Footer ───────────────────────────────────────── */
     footer {
       text-align: center; color: var(--text-dim); font-size: 0.75rem;
@@ -231,7 +269,18 @@
   </style>
 </head>
 <body>
+<nav>
+  <div class="nav-logo">
+    <span class="icon">🌐</span>
+    <span>Trade<em>Gate</em></span>
+  </div>
+  <div class="nav-right">
+    <a class="nav-link" href="/settings.html">⚙ Settings</a>
+    <button class="nav-signout" id="nav-signout">Sign Out</button>
+  </div>
+</nav>
 <div class="page">
+
 
   <!-- Header -->
   <header>
@@ -266,6 +315,9 @@
             <option value="10">🇫🇷 France</option>
           </select>
           <div class="field-error" id="exporterErr"></div>
+          <div class="prefill-note" id="prefillNote">
+            Pre-filled from your settings &mdash; <a href="/settings.html">Change</a>
+          </div>
         </div>
 
         <div class="form-group">
@@ -385,6 +437,25 @@
 
 </div>
 
+<script type="module">
+  // ── Auth gate & country pre-fill ───────────────────
+  await new Promise(r => {
+    if (window.Auth) return r();
+    const t = setInterval(() => { if (window.Auth) { clearInterval(t); r(); } }, 20);
+  });
+
+  await Auth.requireAuth();
+
+  const savedCountry = await Auth.getCountry();
+  if (savedCountry) {
+    const sel = document.getElementById('exporter');
+    sel.value = String(savedCountry);
+    document.getElementById('prefillNote').style.display = 'block';
+  }
+
+  document.getElementById('nav-signout').addEventListener('click', () => Auth.signOut());
+</script>
+
 <script>
   const COUNTRY_NAMES = {
     1:'USA', 2:'China', 3:'India', 4:'Germany', 5:'Japan',
@@ -484,7 +555,7 @@
     hideResult();
 
     try {
-      const res  = await fetch('http://localhost:5000/calculate', {
+      const res  = await fetch('/calculate', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ exporter, importer, category, declared_value, condition }),

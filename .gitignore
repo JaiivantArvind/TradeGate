@@ -93,7 +93,13 @@ desktop.ini
 *~
 
 
-# ── Misc debug / stray media ─────────────────────────────────
+# ── Node / Vite ───────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+
 *.png
 *.jpg
 *.jpeg
